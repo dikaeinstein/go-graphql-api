@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"log"
 
 	"github.com/dikaeinstein/go-graphql-api/data"
 )
@@ -33,7 +32,8 @@ func (p *Postgres) GetUsersByName(ctx context.Context, name string) ([]data.User
 	rows, err := p.QueryContext(ctx, "SELECT * FROM users WHERE name LIKE $1",
 		name)
 	if err != nil {
-		log.Println("GetUsersByName query error:", err)
+		err = fmt.Errorf("GetUsersByName query error: %v", err)
+		return nil, err
 	}
 	defer rows.Close()
 

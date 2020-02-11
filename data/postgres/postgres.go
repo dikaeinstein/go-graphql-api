@@ -14,7 +14,7 @@ type Postgres struct {
 	*sql.DB
 }
 
-// New opens and returns a postgres db connection
+// New opens and returns a postgres DB
 func New(connStr string) (*Postgres, error) {
 	db, err := sql.Open("postgres", connStr)
 	if err != nil {

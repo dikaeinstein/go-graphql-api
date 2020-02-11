@@ -4,14 +4,12 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/go-chi/chi/middleware"
-
-	"github.com/go-chi/chi"
-
 	"github.com/dikaeinstein/go-graphql-api/config"
 	"github.com/dikaeinstein/go-graphql-api/data"
 	"github.com/dikaeinstein/go-graphql-api/data/postgres"
 	"github.com/dikaeinstein/go-graphql-api/gql"
+	"github.com/go-chi/chi"
+	"github.com/go-chi/chi/middleware"
 	"github.com/graphql-go/graphql"
 	"github.com/graphql-go/handler"
 	_ "github.com/lib/pq"

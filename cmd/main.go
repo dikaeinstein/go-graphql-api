@@ -18,6 +18,7 @@ import (
 func main() {
 	cfg := config.New()
 	db := connectPostgresDB(cfg)
+	defer db.Close()
 
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)

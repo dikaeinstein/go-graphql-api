@@ -4,7 +4,8 @@ CREATE TABLE users (
   email VARCHAR (255) NOT NULL,
   age INT NOT NULL,
   profession VARCHAR (50) NOT NULL,
-  friendly BOOLEAN NOT NULL
+  friendly BOOLEAN NOT NULL,
+  CONSTRAINT "email must be unique" UNIQUE(email)
 );
 
 INSERT INTO users VALUES

@@ -16,10 +16,8 @@ func NewRootQuery(resolver Resolver) *Root {
 			Name: "Query",
 			Fields: graphql.Fields{
 				"users": &graphql.Field{
-					Type: graphql.NewList(
-						graphql.NewNonNull(User.Type()),
-					),
-					Description: "List of users that match given name",
+					Type:        graphql.NewList(graphql.NewNonNull(userType)),
+					Description: "Get list of users that match given name",
 					Args: graphql.FieldConfigArgument{
 						"name": &graphql.ArgumentConfig{
 							Type:        graphql.String,
@@ -27,6 +25,17 @@ func NewRootQuery(resolver Resolver) *Root {
 						},
 					},
 					Resolve: resolver.Users,
+				},
+				"user": &graphql.Field{
+					Type:        userType,
+					Description: "Get user by email",
+					Args: graphql.FieldConfigArgument{
+						"email": &graphql.ArgumentConfig{
+							Type:        graphql.String,
+							Description: "Filter by email",
+						},
+					},
+					Resolve: resolver.User,
 				},
 			},
 		},

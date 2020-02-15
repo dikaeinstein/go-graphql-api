@@ -6,6 +6,7 @@ import "context"
 type User struct {
 	ID         int
 	Name       string
+	Email      string
 	Age        int
 	Profession string
 	Friendly   bool
@@ -14,4 +15,5 @@ type User struct {
 // Store describes the data store
 type Store interface {
 	GetUsersByName(ctx context.Context, name string) ([]User, error)
+	GetUserByEmail(ctx context.Context, email string) (*User, error)
 }

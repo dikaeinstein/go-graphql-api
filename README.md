@@ -2,6 +2,11 @@
 
 A graphql API written with GO
 
+## Features
+
+- CRUD
+- Subscriptions [coming soon...]
+
 ## Run The Server
 
 NOTE: ensure you have `realize` installed. You can install it with:

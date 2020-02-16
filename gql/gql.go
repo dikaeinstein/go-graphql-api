@@ -4,14 +4,22 @@ import (
 	"github.com/graphql-go/graphql"
 )
 
-// Root is the root Query
+// Root contains the root Query, Mutation
 type Root struct {
-	Query *graphql.Object
+	Query    *graphql.Object
+	Mutation *graphql.Object
 }
 
-// NewRootQuery creates the Root Query
-func NewRootQuery(resolver Resolver) *Root {
-	rootQuery := graphql.NewObject(
+// NewRoot initializes the root query and mutation
+func NewRoot(resolver Resolver) *Root {
+	return &Root{
+		Query:    newRootQuery(resolver),
+		Mutation: newRootMutation(resolver),
+	}
+}
+
+func newRootQuery(resolver Resolver) *graphql.Object {
+	return graphql.NewObject(
 		graphql.ObjectConfig{
 			Name: "Query",
 			Fields: graphql.Fields{
@@ -40,6 +48,50 @@ func NewRootQuery(resolver Resolver) *Root {
 			},
 		},
 	)
+}
 
-	return &Root{Query: rootQuery}
+func newRootMutation(resolver Resolver) *graphql.Object {
+	return graphql.NewObject(
+		graphql.ObjectConfig{
+			Name: "Mutation",
+			Fields: graphql.Fields{
+				"createUser": &graphql.Field{
+					Name:        "createUser",
+					Description: "Creates a new user and returns the user ID",
+					Type:        userType, // the return type for this field
+					Args: graphql.FieldConfigArgument{
+						"createUserInput": &graphql.ArgumentConfig{
+							Type: graphql.NewNonNull(createUserInput),
+						},
+					},
+					Resolve: resolver.CreateUser,
+				},
+				"updateUser": &graphql.Field{
+					Name:        "updateUser",
+					Description: "Updates user that matches `id` with given payload",
+					Type:        userType,
+					Args: graphql.FieldConfigArgument{
+						"id": &graphql.ArgumentConfig{
+							Type: graphql.NewNonNull(graphql.Int),
+						},
+						"updateUserInput": &graphql.ArgumentConfig{
+							Type: graphql.NewNonNull(updateUserInput),
+						},
+					},
+					Resolve: resolver.UpdateUser,
+				},
+				"deleteUser": &graphql.Field{
+					Name:        "deleteUser",
+					Description: "Deletes user from the data store",
+					Type:        userType,
+					Args: graphql.FieldConfigArgument{
+						"id": &graphql.ArgumentConfig{
+							Type: graphql.NewNonNull(graphql.Int),
+						},
+					},
+					Resolve: resolver.DeleteUser,
+				},
+			},
+		},
+	)
 }

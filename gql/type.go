@@ -18,3 +18,36 @@ var userType = graphql.NewObject(
 		},
 	},
 )
+
+var createUserInput = graphql.NewInputObject(
+	graphql.InputObjectConfig{
+		Name:        "CreateUserInput",
+		Description: "CreateUserInput represents arguments passed to createUser mutation",
+		Fields: graphql.InputObjectConfigFieldMap{
+			"name": &graphql.InputObjectFieldConfig{
+				Type: graphql.NewNonNull(graphql.String)},
+			"email": &graphql.InputObjectFieldConfig{
+				Type: graphql.NewNonNull(graphql.String)},
+			"age": &graphql.InputObjectFieldConfig{
+				Type: graphql.NewNonNull(graphql.Int)},
+			"profession": &graphql.InputObjectFieldConfig{
+				Type: graphql.NewNonNull(graphql.String)},
+			"friendly": &graphql.InputObjectFieldConfig{
+				Type: graphql.NewNonNull(graphql.Boolean)},
+		},
+	},
+)
+
+var updateUserInput = graphql.NewInputObject(
+	graphql.InputObjectConfig{
+		Name:        "UpdateUserInput",
+		Description: "UpdateUserInput represents arguments passed to updateUser mutation",
+		Fields: graphql.InputObjectConfigFieldMap{
+			"name":       &graphql.InputObjectFieldConfig{Type: graphql.String},
+			"email":      &graphql.InputObjectFieldConfig{Type: graphql.String},
+			"age":        &graphql.InputObjectFieldConfig{Type: graphql.Int},
+			"profession": &graphql.InputObjectFieldConfig{Type: graphql.String},
+			"friendly":   &graphql.InputObjectFieldConfig{Type: graphql.Boolean},
+		},
+	},
+)

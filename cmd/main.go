@@ -46,8 +46,11 @@ func connectPostgresDB(cfg config.Config) *postgres.Postgres {
 
 func setupGraphQLHandler(store data.Store) http.Handler {
 	resolver := gql.NewResolver(store)
-	root := gql.NewRootQuery(resolver)
-	schema, err := graphql.NewSchema(graphql.SchemaConfig{Query: root.Query})
+	root := gql.NewRoot(resolver)
+	schema, err := graphql.NewSchema(graphql.SchemaConfig{
+		Query:    root.Query,
+		Mutation: root.Mutation,
+	})
 	if err != nil {
 		log.Fatal(err)
 	}

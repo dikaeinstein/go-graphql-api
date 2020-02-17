@@ -10,8 +10,14 @@ import (
 
 // GetUsersByName retrieves users with name matching the given name
 func (p *Postgres) GetUsersByName(ctx context.Context, name string) ([]data.User, error) {
-	rows, err := p.QueryContext(ctx, "SELECT * FROM users WHERE name LIKE $1;",
-		name)
+	query := `
+	SELECT
+		id, name, email, age, profession, friendly
+	FROM
+		users
+	WHERE
+		name LIKE $1;`
+	rows, err := p.QueryContext(ctx, query, name)
 	if err != nil {
 		return nil, errors.Wrap(err, "GetUsersByName failed")
 	}
@@ -33,8 +39,14 @@ func (p *Postgres) GetUsersByName(ctx context.Context, name string) ([]data.User
 
 // GetUserByEmail retrieves a single user by email
 func (p *Postgres) GetUserByEmail(ctx context.Context, email string) (*data.User, error) {
-	row := p.QueryRowContext(ctx, "SELECT * FROM users WHERE email = $1;",
-		email)
+	query := `
+	SELECT
+		id, name, email, age, profession, friendly
+	FROM
+		users
+	WHERE
+		email = $1;`
+	row := p.QueryRowContext(ctx, query, email)
 
 	var u data.User
 	err := row.Scan(&u.ID, &u.Name, &u.Email, &u.Age,
@@ -84,8 +96,12 @@ func (p *Postgres) UpdateUser(ctx context.Context, id int,
 
 // DeleteUser deletes the user that matches `id` from data store
 func (p *Postgres) DeleteUser(ctx context.Context, id int) (*data.User, error) {
-	row := p.QueryRowContext(ctx,
-		"DELETE FROM users WHERE id = $1 RETURNING *;", id)
+	query := `
+	DELETE FROM users
+	WHERE
+		id = $
+	RETURNING *;`
+	row := p.QueryRowContext(ctx, query, id)
 
 	var u data.User
 	err := row.Scan(&u.ID, &u.Name, &u.Email, &u.Age,

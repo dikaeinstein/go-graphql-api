@@ -1,24 +1,26 @@
 package gql
 
 import (
+	"github.com/dikaeinstein/go-graphql-api/data"
 	"github.com/graphql-go/graphql"
 )
 
 // Root contains the root Query, Mutation
 type Root struct {
-	Query    *graphql.Object
-	Mutation *graphql.Object
+	Query        *graphql.Object
+	Mutation     *graphql.Object
+	Subscription *graphql.Object
 }
 
 // NewRoot initializes the root query and mutation
-func NewRoot(resolver Resolver) *Root {
+func NewRoot(resolver *Resolver) *Root {
 	return &Root{
 		Query:    newRootQuery(resolver),
 		Mutation: newRootMutation(resolver),
 	}
 }
 
-func newRootQuery(resolver Resolver) *graphql.Object {
+func newRootQuery(resolver *Resolver) *graphql.Object {
 	return graphql.NewObject(
 		graphql.ObjectConfig{
 			Name: "Query",
@@ -50,7 +52,7 @@ func newRootQuery(resolver Resolver) *graphql.Object {
 	)
 }
 
-func newRootMutation(resolver Resolver) *graphql.Object {
+func newRootMutation(resolver *Resolver) *graphql.Object {
 	return graphql.NewObject(
 		graphql.ObjectConfig{
 			Name: "Mutation",
@@ -90,6 +92,24 @@ func newRootMutation(resolver Resolver) *graphql.Object {
 						},
 					},
 					Resolve: resolver.DeleteUser,
+				},
+			},
+		},
+	)
+}
+
+func newRootSubscription(resolver *Resolver) *graphql.Object {
+	return graphql.NewObject(
+		graphql.ObjectConfig{
+			Name: "Subscription",
+			Fields: graphql.Fields{
+				"userCreated": &graphql.Field{
+					Name:        "userCreated",
+					Description: "Subscribe to userCreated events",
+					Type:        graphql.NewList(userType),
+					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+						return []data.User{}, nil
+					},
 				},
 			},
 		},

@@ -7,18 +7,20 @@ import (
 	"time"
 
 	"github.com/dikaeinstein/go-graphql-api/data"
+	"github.com/dikaeinstein/go-graphql-api/pubsub"
 	"github.com/graphql-go/graphql"
 	"github.com/mitchellh/mapstructure"
 )
 
 // Resolver resolves the graphql fields
 type Resolver struct {
-	store data.Store
+	store  data.Store
+	pubsub pubsub.PubSub
 }
 
 // NewResolver creates a new Resolver
-func NewResolver(store data.Store) Resolver {
-	return Resolver{store}
+func NewResolver(store data.Store, pubsub pubsub.PubSub) *Resolver {
+	return &Resolver{store, pubsub}
 }
 
 // Users resolves the `users` query
@@ -67,7 +69,9 @@ func (r *Resolver) CreateUser(p graphql.ResolveParams) (interface{}, error) {
 
 	var u data.User
 	mapstructure.Decode(input, &u)
-	return r.store.CreateUser(ctx, u)
+	newUser, err := r.store.CreateUser(ctx, u)
+	r.pubsub.Publish("userCreated", newUser)
+	return newUser, err
 }
 
 // UpdateUser resolves the `updateUser` mutation

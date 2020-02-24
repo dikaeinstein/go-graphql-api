@@ -2,6 +2,10 @@ github.com/coreos/etcd v3.3.18+incompatible h1:Zz1aXgDrFFi1nadh58tA9ktt06cmPTwNN
 github.com/coreos/etcd v3.3.18+incompatible/go.mod h1:uF7uidLiAD3TWHmW31ZFd/JWoc32PjwdhPthX9715RE=
 github.com/go-chi/chi v4.0.3+incompatible h1:gakN3pDJnzZN5jqFV2TEdF66rTfKeITyR8qu6ekICEY=
 github.com/go-chi/chi v4.0.3+incompatible/go.mod h1:eB3wogJHnLi3x/kFX2A+IbTBlXxmMeXJVKy9tTv1XzQ=
+github.com/google/uuid v1.1.1 h1:Gkbcsh/GbpXz7lPftLA3P6TYMwjCLYm83jiFQZF/3gY=
+github.com/google/uuid v1.1.1/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
+github.com/gorilla/websocket v1.4.1 h1:q7AeDBpnBk8AogcD4DSag/Ukw/KV+YhzLj2bP5HvKCM=
+github.com/gorilla/websocket v1.4.1/go.mod h1:YR8l580nyteQvAITg2hZ9XVh4b55+EU/adAjf1fMHhE=
 github.com/graphql-go/graphql v0.7.9 h1:5Va/Rt4l5g3YjwDnid3vFfn43faaQBq7rMcIZ0VnV34=
 github.com/graphql-go/graphql v0.7.9/go.mod h1:k6yrAYQaSP59DC5UVxbgxESlmVyojThKdORUqGDGmrI=
 github.com/graphql-go/handler v0.2.3 h1:CANh8WPnl5M9uA25c2GBhPqJhE53Fg0Iue/fRNla71E=

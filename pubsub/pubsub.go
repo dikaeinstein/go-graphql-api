@@ -1,74 +1,67 @@
 package pubsub
 
 import (
-	"encoding/json"
 	"log"
 	"sync"
 
-	"github.com/gorilla/websocket"
+	"github.com/google/uuid"
 )
 
-// PubSub is the interface that describes the publish and subscribe system
-type PubSub interface {
-	Subscribe(s *Subscriber)
-	Publish(event string, payload interface{})
-	Unsubscribe(subID string)
+// NewInMemoryPubSub initializes an in-memory pubsub system
+func NewInMemoryPubSub() *InMemoryPubSub {
+	return &InMemoryPubSub{subscribers: sync.Map{}}
 }
 
-// NewDefaultPubSub initializes an in-memory pubsub system
-func NewDefaultPubSub() PubSub {
-	return &DefaultPubSub{subscribers: sync.Map{}}
-}
-
-// Subscriber wraps the GRAPHQL client and event that it subscribes to
-type Subscriber struct {
-	ID     string
-	Event  string
-	Client *Client
-}
-
-// Client represents the GRAPHQL client that wants to subscribe to an event.
-type Client struct {
-	Conn          *websocket.Conn
-	RequestString string
-	OperationID   string
-}
-
-type DefaultPubSub struct {
+// InMemoryPubSub implements the PubSub interface with an in-memory map
+type InMemoryPubSub struct {
 	subscribers sync.Map
 }
 
-func (ps *DefaultPubSub) Subscribe(s *Subscriber) {
+// Subscribe subscribes the graphQL client to the event
+func (ps *InMemoryPubSub) Subscribe(event string, handler Handler) string {
+	s := newSubscriber(event, handler)
 	ps.subscribers.Store(s.ID, s)
+	return s.ID
 }
 
-func (ps *DefaultPubSub) Publish(event string, payload interface{}) {
+// Publish publishes to all subscribers of the given event
+func (ps *InMemoryPubSub) Publish(event string, payload interface{}) {
 	ps.subscribers.Range(func(k, v interface{}) bool {
-		subscriber, ok := v.(*Subscriber)
+		subscriber, ok := v.(Subscriber)
 		if !ok {
 			return true
 		}
-		message, err := json.Marshal(map[string]interface{}{
-			"type":    "data",
-			"id":      subscriber.Client.OperationID,
-			"payload": payload,
-		})
-		if err != nil {
-			log.Printf("failed to marshal message: %v", err)
-			return true
-		}
-		if err := subscriber.Client.Conn.WriteMessage(websocket.TextMessage, message); err != nil {
-			if err == websocket.ErrCloseSent {
-				ps.Unsubscribe(k.(string))
+		if subscriber.Event == event {
+			if err := subscriber.Handler(payload); err != nil {
+				log.Println(err)
 				return true
 			}
-			log.Printf("failed to write to ws connection: %v", err)
-			return true
 		}
 		return true
 	})
 }
 
-func (ps *DefaultPubSub) Unsubscribe(subID string) {
+// Unsubscribe removes the subscriber with given subID
+func (ps *InMemoryPubSub) Unsubscribe(subID string) {
 	ps.subscribers.Delete(subID)
+}
+
+// Handler represents the handler func that should be triggered when an event fires.
+type Handler func(payload interface{}) error
+
+// Subscriber represents a client that wants to subscribe to an event.
+// You must specify the handler that will be called when the event fires.
+type Subscriber struct {
+	ID      string
+	Event   string
+	Handler Handler
+}
+
+// newSubscriber creates a new instance of a Subscriber
+func newSubscriber(event string, handler Handler) Subscriber {
+	return Subscriber{
+		ID:      uuid.New().String(),
+		Event:   event,
+		Handler: handler,
+	}
 }

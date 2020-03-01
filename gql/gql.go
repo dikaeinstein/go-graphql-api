@@ -1,7 +1,6 @@
 package gql
 
 import (
-	"github.com/dikaeinstein/go-graphql-api/data"
 	"github.com/graphql-go/graphql"
 )
 
@@ -15,8 +14,9 @@ type Root struct {
 // NewRoot initializes the root query and mutation
 func NewRoot(resolver *Resolver) *Root {
 	return &Root{
-		Query:    newRootQuery(resolver),
-		Mutation: newRootMutation(resolver),
+		Query:        newRootQuery(resolver),
+		Mutation:     newRootMutation(resolver),
+		Subscription: newRootSubscription(resolver),
 	}
 }
 
@@ -106,9 +106,9 @@ func newRootSubscription(resolver *Resolver) *graphql.Object {
 				"userCreated": &graphql.Field{
 					Name:        "userCreated",
 					Description: "Subscribe to userCreated events",
-					Type:        graphql.NewList(userType),
+					Type:        userType,
 					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-						return []data.User{}, nil
+						return p.Info.RootValue, nil
 					},
 				},
 			},

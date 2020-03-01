@@ -1,93 +1,111 @@
 package graphqlws
 
 import (
-	"encoding/json"
 	"log"
 	"net/http"
+	"time"
 
-	"github.com/dikaeinstein/go-graphql-api/pubsub"
-	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
+	"github.com/graphql-go/graphql"
+	"github.com/pkg/errors"
 )
 
-type ConnectionACKMessage struct {
+// ConnectionMessage represents the GraphQL WebSocket message.
+type ConnectionMessage struct {
 	OperationID string `json:"id,omitempty"`
 	Type        string `json:"type"`
 	Payload     struct {
-		Query string `json:"query"`
+		OperationName string                 `json:"operationName,omitempty"`
+		Query         string                 `json:"query"`
+		Variables     map[string]interface{} `json:"variables"`
 	} `json:"payload,omitempty"`
 }
 
 type graphqlWS struct {
-	upgrader      websocket.Upgrader
-	pubsub        pubsub.PubSub
-	eventHandlers ConnectionEventHandlers
+	eventHandlers       ConnectionEventHandlers
+	upgrader            websocket.Upgrader
+	subscriptionManager *SubscriptionManager
 }
 
 // NewHandler returns a websocket based HTTP handler for graphQL
-func NewHandler(upgrader websocket.Upgrader, pubsub pubsub.PubSub,
-	eventHandlers ConnectionEventHandlers) http.Handler {
-	return graphqlWS{upgrader, pubsub, eventHandlers}
+func NewHandler(u websocket.Upgrader, s *SubscriptionManager, e ConnectionEventHandlers) http.Handler {
+	return &graphqlWS{
+		eventHandlers:       e,
+		upgrader:            u,
+		subscriptionManager: s,
+	}
 }
 
-func (gws graphqlWS) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (gws *graphqlWS) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	conn, err := gws.upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Printf("failed to do websocket upgrade: %v", err)
 		return
 	}
-	connectionACK, err := json.Marshal(map[string]string{
+	defer conn.Close()
+
+	connectionACK := map[string]string{
 		"type": gqlConnectionAck,
-	})
-	if err != nil {
-		log.Printf("failed to marshal ws connection ack: %v", err)
 	}
-	if err := conn.WriteMessage(websocket.TextMessage, connectionACK); err != nil {
+	if err := conn.WriteJSON(connectionACK); err != nil {
 		log.Printf("failed to write to ws connection: %v", err)
 		return
 	}
-	go handleWSConn(conn, gws.eventHandlers, gws.pubsub)
+	handleWSConn(conn, gws.subscriptionManager, gws.eventHandlers)
 }
 
-func handleWSConn(conn *websocket.Conn, eventHandlers ConnectionEventHandlers, ps pubsub.PubSub) {
+func handleWSConn(conn *websocket.Conn, subMgr *SubscriptionManager, e ConnectionEventHandlers) {
 	for {
-		_, p, err := conn.ReadMessage()
+		var msg ConnectionMessage
+		err := conn.ReadJSON(&msg)
 		if websocket.IsCloseError(err, websocket.CloseGoingAway) {
-			log.Println("connection closed")
+			log.Println("connection closed; going away")
 			return
 		}
 		if err != nil {
 			log.Println("failed to read websocket message:", err)
 			return
 		}
-		var msg ConnectionACKMessage
-		if err := json.Unmarshal(p, &msg); err != nil {
-			log.Println("failed to unmarshal:", err)
-			return
-		}
-		sub := createSubscriber(conn, msg)
+
 		switch msg.Type {
 		case gqlStart:
-			eventHandlers.Start(conn, sub, ps)
+			s := createSubscription(conn, msg, subMgr)
+			e.Start(s)
 		case gqlStop:
-			eventHandlers.Stop(conn, sub.ID, ps)
+			e.Stop(msg.OperationID)
 		case gqlConnectionTerminate:
-			eventHandlers.Close(conn)
+			e.Close(conn)
 		default:
 			log.Println("unhandled message", msg.Type)
 		}
+		time.Sleep(1000 * time.Millisecond)
 	}
 }
 
-func createSubscriber(conn *websocket.Conn, msg ConnectionACKMessage) *pubsub.Subscriber {
-	c := &pubsub.Client{
-		Conn:          conn,
-		OperationID:   msg.OperationID,
-		RequestString: msg.Payload.Query,
+func createSubscription(conn *websocket.Conn, msg ConnectionMessage, subMgr *SubscriptionManager) *Subscription {
+	callback := func(result *graphql.Result) error {
+		m := map[string]interface{}{
+			"id":      msg.OperationID,
+			"type":    gqlData,
+			"payload": result,
+		}
+		if err := conn.WriteJSON(m); err != nil {
+			if err == websocket.ErrCloseSent {
+				subMgr.RemoveSubscription(msg.OperationID)
+				log.Println("subscription removed")
+			}
+			return errors.Wrap(err, "failed to write to ws connection")
+		}
+
+		return nil
 	}
-	return &pubsub.Subscriber{
-		ID:     uuid.New().String(),
-		Event:  "userCreated",
-		Client: c,
+
+	return &Subscription{
+		ID:            msg.OperationID,
+		RequestString: msg.Payload.Query,
+		Variables:     msg.Payload.Variables,
+		OperationName: msg.Payload.OperationName,
+		Conn:          conn,
+		CallBack:      callback,
 	}
 }

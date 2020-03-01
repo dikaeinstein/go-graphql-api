@@ -7,19 +7,28 @@ import (
 	"time"
 
 	"github.com/dikaeinstein/go-graphql-api/data"
-	"github.com/dikaeinstein/go-graphql-api/pubsub"
+	"github.com/dikaeinstein/go-graphql-api/graphqlws"
 	"github.com/graphql-go/graphql"
 	"github.com/mitchellh/mapstructure"
 )
 
+// Store describes the data store
+type Store interface {
+	GetUsersByName(ctx context.Context, name string) ([]data.User, error)
+	GetUserByEmail(ctx context.Context, email string) (*data.User, error)
+	CreateUser(ctx context.Context, userData data.User) (*data.User, error)
+	UpdateUser(context.Context, int, map[string]interface{}) (*data.User, error)
+	DeleteUser(ctx context.Context, id int) (*data.User, error)
+}
+
 // Resolver resolves the graphql fields
 type Resolver struct {
-	store  data.Store
-	pubsub pubsub.PubSub
+	store  Store
+	pubsub graphqlws.PubSub
 }
 
 // NewResolver creates a new Resolver
-func NewResolver(store data.Store, pubsub pubsub.PubSub) *Resolver {
+func NewResolver(store Store, pubsub graphqlws.PubSub) *Resolver {
 	return &Resolver{store, pubsub}
 }
 
@@ -70,8 +79,11 @@ func (r *Resolver) CreateUser(p graphql.ResolveParams) (interface{}, error) {
 	var u data.User
 	mapstructure.Decode(input, &u)
 	newUser, err := r.store.CreateUser(ctx, u)
+	if err != nil {
+		return nil, err
+	}
 	r.pubsub.Publish("userCreated", newUser)
-	return newUser, err
+	return newUser, nil
 }
 
 // UpdateUser resolves the `updateUser` mutation

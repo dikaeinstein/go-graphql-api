@@ -1,7 +1,6 @@
 package graphqlws
 
 import (
-	"github.com/dikaeinstein/go-graphql-api/pubsub"
 	"github.com/gorilla/websocket"
 )
 
@@ -19,6 +18,9 @@ const (
 	gqlStop                = "stop"
 )
 
+// ConnectionEventHandlers define the event handlers for a connection.
+// Event handlers allow other system components to react to events such
+// as the connection closing or an operation being started or stopped.
 type ConnectionEventHandlers struct {
 	// Close is called whenever the connection is closed, regardless of
 	// whether this happens because of an error or a deliberate termination
@@ -29,11 +31,11 @@ type ConnectionEventHandlers struct {
 	// operation be started (typically a subscription). Event handlers
 	// are expected to take the necessary steps to register the operation
 	// and send data back to the client with the results eventually.
-	Start func(conn *websocket.Conn, sub *pubsub.Subscriber, pubsub pubsub.PubSub)
+	Start func(s *Subscription)
 
 	// Stop handler is called whenever the client stops a previously
 	// started GraphQL operation (typically a subscription). Event handlers
 	// are expected to unregister the operation and stop sending result
 	// data to the client.
-	Stop func(conn *websocket.Conn, subID string, pubsub pubsub.PubSub)
+	Stop func(subID string)
 }

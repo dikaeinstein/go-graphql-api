@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/dikaeinstein/go-graphql-api/config"
-	"github.com/dikaeinstein/go-graphql-api/data"
 	"github.com/dikaeinstein/go-graphql-api/data/postgres"
 	"github.com/dikaeinstein/go-graphql-api/gql"
 	"github.com/dikaeinstein/go-graphql-api/graphqlws"
@@ -32,10 +31,11 @@ func main() {
 
 	ps := pubsub.NewDefaultPubSub()
 
-	graphql := setupGraphQLHandler(db, ps)
+	schema := setupGraphQLSchema(db, ps)
+	graphql := setupGraphQLHandler(schema)
 	r.Handle("/graphql", graphql)
 
-	graphqlws := setupGraphQLWSHandler(ps)
+	graphqlws := setupGraphQLWSHandler(schema, ps)
 	r.Handle("/subscriptions", graphqlws)
 
 	log.Println("Server listening on port:", cfg.Port)
@@ -56,7 +56,7 @@ func connectPostgresDB(cfg config.Config) *postgres.Postgres {
 	return postgresDB
 }
 
-func setupGraphQLHandler(store data.Store, pubsub pubsub.PubSub) http.Handler {
+func setupGraphQLSchema(store gql.Store, pubsub graphqlws.PubSub) graphql.Schema {
 	resolver := gql.NewResolver(store, pubsub)
 	root := gql.NewRoot(resolver)
 	schema, err := graphql.NewSchema(graphql.SchemaConfig{
@@ -68,6 +68,10 @@ func setupGraphQLHandler(store data.Store, pubsub pubsub.PubSub) http.Handler {
 		log.Fatal(err)
 	}
 
+	return schema
+}
+
+func setupGraphQLHandler(schema graphql.Schema) http.Handler {
 	return handler.New(&handler.Config{
 		Schema:     &schema,
 		GraphiQL:   false,
@@ -76,7 +80,7 @@ func setupGraphQLHandler(store data.Store, pubsub pubsub.PubSub) http.Handler {
 	})
 }
 
-func setupGraphQLWSHandler(ps pubsub.PubSub) http.Handler {
+func setupGraphQLWSHandler(schema graphql.Schema, ps graphqlws.PubSub) http.Handler {
 	upgrader := websocket.Upgrader{
 		ReadBufferSize:  1024,
 		WriteBufferSize: 1024,
@@ -85,17 +89,27 @@ func setupGraphQLWSHandler(ps pubsub.PubSub) http.Handler {
 		},
 		Subprotocols: []string{"graphql-ws"},
 	}
+
+	subManager := graphqlws.NewSubscriptionManager(&schema, ps)
+
 	eventHandlers := graphqlws.ConnectionEventHandlers{
-		Start: func(conn *websocket.Conn, sub *pubsub.Subscriber, ps pubsub.PubSub) {
-			ps.Subscribe(sub)
+		Start: func(s *graphqlws.Subscription) {
+			subManager.AddSubscription(s)
+			log.Println("subscription added")
 		},
-		Stop: func(conn *websocket.Conn, subID string, ps pubsub.PubSub) {
-			ps.Unsubscribe(subID)
+		Stop: func(subscriptionID string) {
+			subManager.RemoveSubscription(subscriptionID)
+			log.Println("subscription removed")
 		},
 		Close: func(conn *websocket.Conn) {
+			log.Println("closing graphQL client connection...")
 			time.Sleep(closeGracePeriod)
-			conn.Close()
+			if err := conn.Close(); err != nil {
+				log.Println(err)
+			}
+			log.Println("connection closed")
 		},
 	}
-	return graphqlws.NewHandler(upgrader, ps, eventHandlers)
+
+	return graphqlws.NewHandler(upgrader, subManager, eventHandlers)
 }

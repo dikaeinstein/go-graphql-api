@@ -11,9 +11,12 @@ import (
 	"github.com/pkg/errors"
 )
 
+// Handler represents the handler func that should be triggered when an event fires.
+type Handler func(payload interface{}) error
+
 // PubSub is the interface that describes the publish and subscribe system.
 type PubSub interface {
-	Subscribe(event string, handler func(payload interface{}) error) (subID string)
+	Subscribe(event string, handler Handler) (subID string)
 	Publish(event string, payload interface{})
 	Unsubscribe(subID string)
 }

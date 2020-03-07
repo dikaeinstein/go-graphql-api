@@ -12,7 +12,7 @@ import (
 	"github.com/mitchellh/mapstructure"
 )
 
-// Store describes the data store
+// Store describes the data store.
 type Store interface {
 	GetUsersByName(ctx context.Context, name string) ([]data.User, error)
 	GetUserByEmail(ctx context.Context, email string) (*data.User, error)
@@ -21,18 +21,18 @@ type Store interface {
 	DeleteUser(ctx context.Context, id int) (*data.User, error)
 }
 
-// Resolver resolves the graphql fields
+// Resolver resolves the graphql fields.
 type Resolver struct {
 	store  Store
 	pubsub graphqlws.PubSub
 }
 
-// NewResolver creates a new Resolver
+// NewResolver creates a new Resolver.
 func NewResolver(store Store, pubsub graphqlws.PubSub) *Resolver {
 	return &Resolver{store, pubsub}
 }
 
-// Users resolves the `users` query
+// Users resolves the `users` query.
 func (r *Resolver) Users(p graphql.ResolveParams) (interface{}, error) {
 	ctx, cancelFunc := context.WithTimeout(p.Context, 3*time.Second)
 	defer cancelFunc()
@@ -45,7 +45,7 @@ func (r *Resolver) Users(p graphql.ResolveParams) (interface{}, error) {
 	return r.store.GetUsersByName(ctx, name)
 }
 
-// User resolves the `user` query
+// User resolves the `user` query.
 func (r *Resolver) User(p graphql.ResolveParams) (interface{}, error) {
 	ctx, cancelFunc := context.WithTimeout(p.Context, 3*time.Second)
 	defer cancelFunc()
@@ -66,7 +66,7 @@ func (r *Resolver) User(p graphql.ResolveParams) (interface{}, error) {
 	return user, nil
 }
 
-// CreateUser resolves the `createUser` mutation
+// CreateUser resolves the `createUser` mutation.
 func (r *Resolver) CreateUser(p graphql.ResolveParams) (interface{}, error) {
 	ctx, cancelFunc := context.WithTimeout(p.Context, 3*time.Second)
 	defer cancelFunc()
@@ -86,7 +86,7 @@ func (r *Resolver) CreateUser(p graphql.ResolveParams) (interface{}, error) {
 	return newUser, nil
 }
 
-// UpdateUser resolves the `updateUser` mutation
+// UpdateUser resolves the `updateUser` mutation.
 func (r *Resolver) UpdateUser(p graphql.ResolveParams) (interface{}, error) {
 	ctx, cancelFunc := context.WithTimeout(p.Context, 3*time.Second)
 	defer cancelFunc()
@@ -108,7 +108,7 @@ func (r *Resolver) UpdateUser(p graphql.ResolveParams) (interface{}, error) {
 	return updatedUser, nil
 }
 
-// DeleteUser resolves the `deleteUser` mutation
+// DeleteUser resolves the `deleteUser` mutation.
 func (r *Resolver) DeleteUser(p graphql.ResolveParams) (interface{}, error) {
 	ctx, cancelFunc := context.WithTimeout(p.Context, 3*time.Second)
 	defer cancelFunc()

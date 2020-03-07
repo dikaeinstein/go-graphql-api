@@ -29,7 +29,7 @@ func main() {
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
 
-	ps := pubsub.NewDefaultPubSub()
+	ps := pubsub.NewInMemoryPubSub()
 
 	schema := setupGraphQLSchema(db, ps)
 	graphql := setupGraphQLHandler(schema)

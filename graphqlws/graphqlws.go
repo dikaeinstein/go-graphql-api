@@ -27,7 +27,7 @@ type graphqlWS struct {
 	subscriptionManager *SubscriptionManager
 }
 
-// NewHandler returns a websocket based HTTP handler for graphQL
+// NewHandler returns a websocket based HTTP handler for graphQL.
 func NewHandler(u websocket.Upgrader, s *SubscriptionManager, e ConnectionEventHandlers) http.Handler {
 	return &graphqlWS{
 		eventHandlers:       e,

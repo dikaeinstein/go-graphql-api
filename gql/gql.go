@@ -4,14 +4,14 @@ import (
 	"github.com/graphql-go/graphql"
 )
 
-// Root contains the root Query, Mutation
+// Root contains the root Query, Mutation and Subscription.
 type Root struct {
 	Query        *graphql.Object
 	Mutation     *graphql.Object
 	Subscription *graphql.Object
 }
 
-// NewRoot initializes the root query and mutation
+// NewRoot initializes the root query, mutation and subscription.
 func NewRoot(resolver *Resolver) *Root {
 	return &Root{
 		Query:        newRootQuery(resolver),

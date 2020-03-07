@@ -1,6 +1,6 @@
 package data
 
-// User shape
+// User represents a user in our system.
 type User struct {
 	ID         int
 	Name       string

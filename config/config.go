@@ -40,7 +40,7 @@ func New() Config {
 	}
 }
 
-// Simple helper function to read an environment or return a default value
+// Simple helper function to read an environment or return a default value.
 func getEnv(key, defaultValue string) string {
 	if value, exists := os.LookupEnv(key); exists {
 		return value
@@ -48,7 +48,7 @@ func getEnv(key, defaultValue string) string {
 	return defaultValue
 }
 
-// Helper to read an environment variable into a bool or return a default value
+// Helper to read an environment variable into a bool or return a default value.
 func getEnvAsBool(name string, defaultVal bool) bool {
 	valStr := getEnv(name, "")
 	if val, err := strconv.ParseBool(valStr); err == nil {
@@ -58,7 +58,7 @@ func getEnvAsBool(name string, defaultVal bool) bool {
 }
 
 // Simple helper function to read an environment variable into an integer
-// or return a default value
+// or return a default value.
 func getEnvAsInt(name string, defaultVal int) int {
 	valueStr := getEnv(name, "")
 	if value, err := strconv.Atoi(valueStr); err == nil {

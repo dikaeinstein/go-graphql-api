@@ -8,7 +8,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-// GetUsersByName retrieves users with name matching the given name
+// GetUsersByName retrieves users with name matching the given name.
 func (p *Postgres) GetUsersByName(ctx context.Context, name string) ([]data.User, error) {
 	query := `
 	SELECT
@@ -37,7 +37,7 @@ func (p *Postgres) GetUsersByName(ctx context.Context, name string) ([]data.User
 	return users, errors.Wrap(rows.Err(), "GetUsersByName failed")
 }
 
-// GetUserByEmail retrieves a single user by email
+// GetUserByEmail retrieves a single user by email.
 func (p *Postgres) GetUserByEmail(ctx context.Context, email string) (*data.User, error) {
 	query := `
 	SELECT
@@ -58,7 +58,7 @@ func (p *Postgres) GetUserByEmail(ctx context.Context, email string) (*data.User
 	return &u, nil
 }
 
-// CreateUser creates a new user and returns the ID
+// CreateUser creates a new user and returns the ID.
 func (p *Postgres) CreateUser(ctx context.Context, u data.User) (*data.User, error) {
 	query := `
 	INSERT INTO users(name, email, age, profession, friendly)
@@ -78,7 +78,7 @@ func (p *Postgres) CreateUser(ctx context.Context, u data.User) (*data.User, err
 	return &newUser, nil
 }
 
-// UpdateUser updates the user that matches `id` with given `payload`
+// UpdateUser updates the user that matches `id` with given `payload`.
 func (p *Postgres) UpdateUser(ctx context.Context, id int,
 	payload map[string]interface{}) (*data.User, error) {
 	query := prepareUpdateQuery(payload)
@@ -94,7 +94,7 @@ func (p *Postgres) UpdateUser(ctx context.Context, id int,
 	return &u, nil
 }
 
-// DeleteUser deletes the user that matches `id` from data store
+// DeleteUser deletes the user that matches `id` from data store.
 func (p *Postgres) DeleteUser(ctx context.Context, id int) (*data.User, error) {
 	query := `
 	DELETE FROM users

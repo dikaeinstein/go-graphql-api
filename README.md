@@ -5,7 +5,7 @@ A graphql API written with GO
 ## Features
 
 - CRUD
-- Subscriptions [coming soon...]
+- Subscriptions
 
 ## Run The Server
 
